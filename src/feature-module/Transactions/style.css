@@ -1,0 +1,16 @@
+.primaryBtn {
+    color: #fff;
+    background: #FF9F43;
+}
+.imgBlock {
+    position: relative;
+    margin-right: 5px;
+}
+.remove-product-icon{
+    font-size: 25px;
+    color: #fff;
+    position: absolute;
+    cursor: pointer;
+    top: 7;
+    left: 7;
+}
