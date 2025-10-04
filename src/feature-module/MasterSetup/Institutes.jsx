@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useNavigate } from "react-router-dom/dist";
+import { Link } from "react-router-dom/dist";
 import Swal from "sweetalert2";
 import Table from "../../core/pagination/datatable";
 import Select from "react-select";
@@ -18,16 +18,14 @@ import { deleteInstitutes, getInstitutes } from "../../core/redux/action";
 import withReactContent from "sweetalert2-react-content";
 import { useEffect } from "react";
 import { format } from "date-fns";
-import { all_routes } from "../../Router/all_routes";
 import AddInstitutes from "./AddInstitutes"
 import EditInstitutes from "./EditInstitutes"
+import { useLoginData } from "../../helper/loginUserData";
 
 const Institutes = () => {
 
-  const route = all_routes;
   const dispatch = useDispatch();
   const postData = useSelector((state) => state.institutes);
-  const users = useSelector((state) => state.users);
   const institutes = useSelector((state) => state.institutes);
   const [getEditMode, setEditMode] = useState(false);
   const [search, setSearch] = useState({ name: "Choose Institutes", date: null, status: true });
@@ -36,13 +34,7 @@ const Institutes = () => {
   const [dataSource, setDataSource] = useState([]);
   const [insertMode, setInsertMode] = useState(false);
 
-  const [loginUser, setLoginUser] = useState(null);
-  // useEffect(() => {
-  //   if (loginUser) {
-  //   } else {
-  //     setPosts([]);
-  //   }
-  // }, [loginUser, postData1]);
+  const loginUser = useLoginData();
 
   const oldandlatestvalue = [
     { value: "date", label: "Sort by Date" },
@@ -205,17 +197,6 @@ const Institutes = () => {
   const handleInsert = () => {
     setInsertMode(true);
   }
-
-  const navigate = useNavigate();
-  const val = localStorage.getItem("userID");
-  useEffect(() => {
-    if (!isNaN(val) && Number.isInteger(Number(val)) && Number(val) > 0) {
-      const id = Number(val);
-      setLoginUser(users.find((i) => i.userId === id));
-    }
-    else
-      navigate(route.signin);
-  }, [users, navigate]);
 
   return (
     <div>

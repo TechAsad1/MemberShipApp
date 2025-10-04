@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useNavigate } from "react-router-dom/dist";
+import { Link } from "react-router-dom/dist";
 import Swal from "sweetalert2";
 import Table from "../../core/pagination/datatable";
 import Select from "react-select";
@@ -18,33 +18,22 @@ import { deleteQualification, getQualification } from "../../core/redux/action";
 import withReactContent from "sweetalert2-react-content";
 import { useEffect } from "react";
 import { format } from "date-fns";
-import { all_routes } from "../../Router/all_routes";
 import AddEducation from "./AddEducation";
 import EditEducation from "./EditEducation";
+import { useLoginData } from "../../helper/loginUserData";
 
 const Education = () => {
 
-  const route = all_routes;
   const dispatch = useDispatch();
   const postData = useSelector((state) => state.qualification);
-  const users = useSelector((state) => state.users);
   const [getEditMode, setEditMode] = useState(false);
   const [search, setSearch] = useState({ name: "Choose Qualification", date: null, status: true });
   const [option, setOption] = useState([{ value: "Choose Qualification", label: 'Choose Qualification' }]);
   const [getInvId, setInvId] = useState();
   const [dataSource, setDataSource] = useState([]);
   const [insertMode, setInsertMode] = useState(false);
+  const loginUser = useLoginData();
 
-  // const [postData, setPosts] = useState([]);
-  const [loginUser, setLoginUser] = useState(null);
-
-  // useEffect(() => {
-  //     setPosts(postData1);
-  //   // if (loginUser) {
-  //   // } else {
-  //   //   setPosts([]);
-  //   // }
-  // }, [loginUser, postData1]);
   const oldandlatestvalue = [
     { value: "date", label: "Sort by Date" },
     { value: "newest", label: "Newest" },
@@ -361,7 +350,7 @@ const Education = () => {
           </div>
         </div>
       </div>
-      <AddEducation userId={loginUser?.userId} insertMode={insertMode} setInsertMode={setInsertMode}/>
+      <AddEducation userId={loginUser?.userId} insertMode={insertMode} setInsertMode={setInsertMode} />
       <EditEducation id={getInvId} isEditMode={getEditMode} setEditMode={setEditMode} />
     </div>
   );

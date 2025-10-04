@@ -20,10 +20,10 @@ import { useEffect } from "react";
 import { format } from "date-fns";
 import AddUser from "./AddUser";
 import EditUser from "./EditUser";
+import { useLoginData } from "../../helper/loginUserData";
 
 const Users = () => {
 
-//   const route = all_routes;
   const dispatch = useDispatch();
   const postData = useSelector((state) => state.users);
   const [getEditMode, setEditMode] = useState(false);
@@ -33,7 +33,7 @@ const Users = () => {
   const [dataSource, setDataSource] = useState([]);
   const [insertMode, setInsertMode] = useState(false);
 
-  const [loginUser, setLoginUser] = useState(null);
+  const loginUser = useLoginData();
 
   const oldandlatestvalue = [
     { value: "date", label: "Sort by Date" },
@@ -206,17 +206,6 @@ const Users = () => {
   const handleInsert = () => {
     setInsertMode(true);
   }
-
-  // const navigate = useNavigate();
-  // const val = localStorage.getItem("userID");
-  // useEffect(() => {
-  //   if (!isNaN(val) && Number.isInteger(Number(val)) && Number(val) > 0) {
-  //     // const id = Number(val);
-  //     // setLoginUser(users.find((i) => i.userId === id));
-  //   }
-  //   else
-  //     navigate(route.signin);
-  // }, [users, navigate]);
 
   return (
     <div>

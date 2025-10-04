@@ -24,6 +24,7 @@ import Webcam from "react-webcam";
 import "./style.css"
 import { IoCloseCircle } from "react-icons/io5";
 import config from "../../config"
+import webcam from "../../images/webcam.png";
 
 const AddNewMember = () => {
     const route = all_routes;
@@ -36,7 +37,6 @@ const AddNewMember = () => {
     );
 
     //Custom Code
-    // const [userId, setUserId] = useState(0);
     const areas = useSelector((state) => state.area);
     const educations = useSelector((state) => state.qualification);
     const institutes = useSelector((state) => state.institutes);
@@ -48,6 +48,7 @@ const AddNewMember = () => {
 
     const [educationList, setEducationList] = useState([]);
     const [selectEducation, setSelectEducation] = useState([{ value: 0, label: "Choose Option" }]);
+    const [selectFamilyEducation, setSelectFamilyEducation] = useState([{ value: 0, label: "Choose Option" }]);
 
     const [institutesList, setInstitutesList] = useState([]);
     const [selectInstitutes, setSelectInstitutes] = useState([{ value: 0, label: "Choose Option" }]);
@@ -182,6 +183,7 @@ const AddNewMember = () => {
         userID: 1,
         isContributor: false
     });
+    const [familyMemberList, setFamilyMemberList] = useState([]);
     //Submit
     const handleSubmit = async () => {
         if (validate()) {
@@ -194,8 +196,8 @@ const AddNewMember = () => {
                 memberStatus: formData.memberStatus, regdate: regDateState, verifiedBy: formData.verifiedBy, entryDate: regDateState, userId: formData.userID,
                 isContributor: formData.isContributor,
                 MembersPicPath: (imageList[0] != null) ? imageList[0] : null,
-                MembersPicPath2: (imageList[1].length > 0) ? imageList[1] : null,
-                MembersPicPath3: (imageList[2].length > 1) ? imageList[2] : null
+                MembersPicPath2: (imageList.length === 2) ? imageList[1] : null,
+                MembersPicPath3: (imageList.length === 3) ? imageList[2] : null
             };
             const memberUrl = config.url + "Member";
             await axios.post(memberUrl, temp).then((e) => {
@@ -211,13 +213,16 @@ const AddNewMember = () => {
     const successAlert = () => {
         MySwal.fire({
             icon: "success",
-            title: "Record updated successfully",
+            title: "Record inserted successfully",
             confirmButtonText: "Ok",
         })
     };
     const handleEducation = (selected) => {
         setFormData({ ...formData, qualificationId: selected.value });
         setSelectEducation(educationList.find((x) => x.value === selected.value));
+    };
+    const handleFamilyEducation = (selected) => {
+        setSelectFamilyEducation(educationList.find((x) => x.value === selected.value));
     };
     const handleInstitutes = (selected) => {
         setSelectInstitutes(institutesList.find((x) => x.value === selected.value));
@@ -230,10 +235,6 @@ const AddNewMember = () => {
         setFormData({ ...formData, sourceOfIncome: e.value });
         setSelectSourceOfIncome(sourceOfIncomeList.find((x) => x.value === e.value));
     }
-    // const handleInstitutes = (selected) => {
-    //     setFormData({ ...formData, institutes: selected.value });
-    //     setSelectInstitutes(institutesList.find((x) => x.value === selected.value));
-    // };
     const handleHouseStatus = (selected) => {
         setFormData({ ...formData, houseStatus: selected.value });
         setSelectHouseStatus(selected);
@@ -248,19 +249,6 @@ const AddNewMember = () => {
     const handleRelation = (selected) => {
         setSelectRelation(selected);
     };
-    // const navigate = useNavigate();
-    // const val = localStorage.getItem("userID");
-    // useEffect(() => {
-    //     if (!isNaN(val) && Number.isInteger(Number(val)) && Number(val) > 0) {
-    //         const id = Number(val);
-    //         setUserId(id);
-    //     }
-    //     else
-    //         navigate(route.signin);
-    // }, [navigate]);
-    // if (userId === 0)
-    //     return null;
-    const [familyMemberList, setFamilyMemberList] = useState([]);
     //FamilyMember Ref
     const familyMemberNameRef = useRef();
     const ageRef = useRef();
@@ -306,8 +294,8 @@ const AddNewMember = () => {
                 name: familyMemberNameRef.current.value,
                 relation: selectRelation?.label || "",
                 age: Number(ageRef.current.value),
-                qualificationId: selectEducation?.value || "0",
-                instituteId: selectInstitutes?.value || "0",
+                qualificationId: selectFamilyEducation?.value || 0,
+                instituteId: selectInstitutes?.value || 0,
                 educationAllw: allowEducationRef.current.checked,
                 bookAllw: allowBookRef.current.checked,
             };
@@ -319,19 +307,22 @@ const AddNewMember = () => {
                 );
             else
                 setFamilyMemberList((prev) => [...prev, newMember]);
-            setFamilyErrors({ ...familyErrors, familyMembernameErr: "", relationsErr: "", ageErr: "", institute: "" });
-            familyMemberNameRef.current.value = "";
-            ageRef.current.value = "0";
-            await delay(500);
-            handleRelation(relation[0]);
-            handleEducation(educationList[0]);
-            handleInstitutes(institutesList[0]);
-            setIsUpdateMode(false);
-            allowEducationRef.current.checked = false;
-            allowBookRef.current.checked = false;
+            clearChildRow();
             return true;
         }
     };
+    const clearChildRow = async () => {
+        setFamilyErrors({ ...familyErrors, familyMembernameErr: "", relationsErr: "", ageErr: "", institute: "" });
+        familyMemberNameRef.current.value = "";
+        ageRef.current.value = "0";
+        await delay(500);
+        handleRelation(relation[0]);
+        handleFamilyEducation(educationList[0]);
+        handleInstitutes(institutesList[0]);
+        setIsUpdateMode(false);
+        allowEducationRef.current.checked = false;
+        allowBookRef.current.checked = false;
+    }
     const handleFamilyMemberRemove = (index) => {
         familyMemberRemoveAlert(index);
     };
@@ -342,9 +333,9 @@ const AddNewMember = () => {
         ageRef.current.value = row[0].age;
         handleRelation(relation.find((e) => e.value === row[0].relation));
         if (row[0].qualificationId > 0)
-            handleEducation(educationList.find((e) => e.value === row[0].qualificationId));
+            handleFamilyEducation(educationList.find((e) => e.value === row[0].qualificationId));
         else
-            handleEducation(educationList[0]);
+            handleFamilyEducation(educationList[0]);
         if (row[0].instituteId > 0)
             handleInstitutes(institutesList.find((e) => e.value === row[0].instituteId));
         else
@@ -358,7 +349,6 @@ const AddNewMember = () => {
     const familyMemberRemoveAlert = (index) => {
         MySwal.fire({
             title: "Are you sure you want to delete this record ?",
-            // text: "You won't be able to revert this!",
             showCancelButton: true,
             confirmButtonColor: "#00ff00",
             confirmButtonText: "Yes, delete it!",
@@ -368,6 +358,8 @@ const AddNewMember = () => {
             if (result.isConfirmed) {
                 const updated = familyMemberList.filter((_, i) => i !== index);
                 setFamilyMemberList(updated);
+                if (indexNumber === index)
+                    clearChildRow();
             } else {
                 MySwal.close();
             }
@@ -377,13 +369,30 @@ const AddNewMember = () => {
     const [imageList, setImageList] = useState([]);
     const webCamRef = useRef();
     const handleAddMemberPic = () => {
-        if (imageList.length < 3) {
+        if (webCamRef.current && webCamRef.current.getScreenshot) {
             const capture = webCamRef.current.getScreenshot();
-            setImageList((e) => [...e, capture]);
+
+            if (capture) {
+                if (imageList.length < 3) {
+                    setImageList((prev) => [...prev, capture]);
+                } else {
+                    imgQtyAlert();
+                }
+            } else {
+                msgAlert("Webcam not ready yet, no screenshot captured");
+            }
         }
-        else
-            imgQtyAlert();
+        else {
+            msgAlert("Webcam not connected!");
+        }
     }
+    const msgAlert = (msg) => {
+        MySwal.fire({
+            icon: "error",
+            title: msg,
+            confirmButtonText: "Ok",
+        })
+    };
     const imgQtyAlert = () => {
         MySwal.fire({
             icon: "error",
@@ -394,14 +403,30 @@ const AddNewMember = () => {
     const handleRemoveMemberPic = (i) => {
         setImageList((e) => e.filter((_, a) => a != i));
     }
+
+    const [hasCamera, setHasCamera] = useState(false);
+    useEffect(() => {
+        const updateDevices = async () => {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            setHasCamera(devices.some((d) => d.kind === "videoinput"));
+        };
+
+        navigator.mediaDevices.addEventListener("devicechange", updateDevices);
+
+        updateDevices(); // initial check
+
+        return () => {
+            navigator.mediaDevices.removeEventListener("devicechange", updateDevices);
+        };
+    }, []);
+
     return (
         <div className="page-wrapper">
             <div className="content">
                 <div className="page-header">
                     <div className="add-item d-flex">
                         <div className="page-title">
-                            <h4>Update Member</h4>
-                            {/* <h6>Create new Member</h6> */}
+                            <h4>New Member</h4>
                         </div>
                     </div>
                     <ul className="table-top-head">
@@ -642,27 +667,16 @@ const AddNewMember = () => {
 
                                                     <div className="row">
                                                         <div className="col-12">
-                                                            <Webcam width="170px" height="170px" ref={webCamRef} screenshotFormat="image/jpeg" />
-
+                                                            {hasCamera ? (
+                                                                <Webcam width="170px" height="170px" ref={webCamRef} screenshotFormat="image/jpeg" />
+                                                            ) : (
+                                                                <img src={webcam} alt="webcam" width="170px" height="170px" />
+                                                            )}
                                                             <div className="row">
                                                                 <div className="col-10">
                                                                     <button className="btn rounded primaryBtn" onClick={handleAddMemberPic}>Capture</button>
                                                                 </div>
-                                                                {/* {WebCamImage && (
-                                                                        <img src={WebCamImage} width={100} height={100} />
-                                                                    )} */}
                                                             </div>
-
-                                                            {/* <div className="new-employee-field">
-                                                                    <div className="input-blocks mb-0">
-                                                                        <div className="image-upload mb-0">
-                                                                            <input type="file" accept="image/*" onChange={handleImage} />
-                                                                            <div className="image-uploads">
-                                                                                <h4>Capture</h4>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div> */}
                                                         </div>
                                                         <div className="col-12 d-flex" style={{ marginTop: "5px" }}>
 
@@ -671,23 +685,7 @@ const AddNewMember = () => {
                                                                     <IoCloseCircle className="remove-product-icon" onClick={() => handleRemoveMemberPic(index)} />
                                                                     <img src={i} width={100} height={100} />
                                                                 </div>
-                                                                // <div className="new-employee-field">
-                                                                //     <div className="profile-pic-upload mb-2">
-                                                                //         <div className="profile-pic" ref={picRef}>
-                                                                //             {!isImageVisible && <span>
-                                                                //                 <PlusCircle className="plus-down-add" />
-                                                                //                 Member Picture
-                                                                //             </span>}
-                                                                //             {isImageVisible && <Link to="#" style={{ position: "absolute", top: "7px", right: "7px" }}>
-                                                                //                 <X className="x-square-add remove-product" onClick={handleRemoveProduct} />
-                                                                //             </Link>}
-                                                                //         </div>
-                                                                //     </div>
-                                                                // </div>
                                                             ))}
-
-
-
 
                                                         </div>
                                                     </div>
@@ -700,45 +698,47 @@ const AddNewMember = () => {
 
 
                                     <label className="form-label">Family Member</label>
-                                    <table className="table table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>Family Member Name</th>
-                                                <th>Relation</th>
-                                                <th>Age</th>
-                                                <th>Education</th>
-                                                <th>Institute</th>
-                                                <th>AllowEducation</th>
-                                                <th>AllowBook</th>
-                                                <th></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {familyMemberList.map((i, index) => (
-                                                <tr key={index}>
-                                                    <td>{i.name}</td>
-                                                    <td>{i.relation}</td>
-                                                    <td>{i.age}</td>
-                                                    <td>{educationList.find((e) => e.value === i.qualificationId)?.label || ""}</td>
-                                                    <td>{institutesList.find((e) => e.value === i.instituteId)?.label || ""}</td>
-                                                    <td>
-                                                        {i.educationAllw ? (<><FaCheck /> Yes</>
-                                                        ) : (<><IoClose /> No</>)}
-                                                    </td>
-                                                    <td>
-                                                        {i.bookAllw ? (<><FaCheck /> Yes</>
-                                                        ) : (<><IoClose /> No</>)}
-                                                    </td>
-                                                    <td>
-                                                        <h3>
-                                                            <RiEdit2Fill onClick={() => handleFamilyMemberEdit(index)} style={{ "margin-right": "10px", "cursor": "pointer" }} />
-                                                            <MdDeleteForever onClick={() => handleFamilyMemberRemove(index)} style={{ "cursor": "pointer" }} />
-                                                        </h3>
-                                                    </td>
+                                    <div className="table-responsive">
+                                        <table className="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Family Member Name</th>
+                                                    <th>Relation</th>
+                                                    <th>Age</th>
+                                                    <th>Education</th>
+                                                    <th>Institute</th>
+                                                    <th>AllowEducation</th>
+                                                    <th>AllowBook</th>
+                                                    <th></th>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                            </thead>
+                                            <tbody>
+                                                {familyMemberList.map((i, index) => (
+                                                    <tr key={index}>
+                                                        <td>{i.name}</td>
+                                                        <td>{i.relation}</td>
+                                                        <td>{i.age}</td>
+                                                        <td>{educationList.find((e) => e.value === i.qualificationId)?.label || ""}</td>
+                                                        <td>{institutesList.find((e) => e.value === i.instituteId)?.label || ""}</td>
+                                                        <td>
+                                                            {i.educationAllw ? (<><FaCheck /> Yes</>
+                                                            ) : (<><IoClose /> No</>)}
+                                                        </td>
+                                                        <td>
+                                                            {i.bookAllw ? (<><FaCheck /> Yes</>
+                                                            ) : (<><IoClose /> No</>)}
+                                                        </td>
+                                                        <td>
+                                                            <h3>
+                                                                <RiEdit2Fill onClick={() => handleFamilyMemberEdit(index)} style={{ "margin-right": "10px", "cursor": "pointer" }} />
+                                                                <MdDeleteForever onClick={() => handleFamilyMemberRemove(index)} style={{ "cursor": "pointer" }} />
+                                                            </h3>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
 
                                     <div className="d-flex border-top m-0 p-2 rounded row">
                                         <div className="col-lg-2 col-sm-4 col-12 flex-fill">
@@ -759,7 +759,7 @@ const AddNewMember = () => {
                                         </div>
                                         <div className="col-lg-2 col-sm-4 col-12 flex-fill">
                                             <label className="form-label">Age</label>
-                                            <input type="text" className="form-control" ref={ageRef} defaultValue={0}></input>
+                                            <input type="number" className="form-control" ref={ageRef} defaultValue={0}></input>
                                             {familyErrors.ageErr && <p style={{ "color": "#dc3545", "padding": "3px" }}>Member age required!</p>}
                                         </div>
                                         <div className="col-lg-2 col-sm-4 col-12 flex-fill">
@@ -768,8 +768,8 @@ const AddNewMember = () => {
                                                 classNamePrefix="react-select"
                                                 placeholder="Choose Option"
                                                 options={educationList}
-                                                value={selectEducation}
-                                                onChange={handleEducation}
+                                                value={selectFamilyEducation}
+                                                onChange={handleFamilyEducation}
                                             />
                                         </div>
                                         <div className="col-lg-2 col-sm-4 col-12 flex-fill">
@@ -827,10 +827,3 @@ const AddNewMember = () => {
 };
 
 export default AddNewMember;
-
-
-
-// invoice_line_ids.sale_line_ids.order_id.x_studio_final_destination_2
-
-// for record in self:
-//     record['x_studio_final_destinations'] = record.invoice_line_ids.mapped('sale_line_ids').mapped('order_id').x_studio_final_destinations_2

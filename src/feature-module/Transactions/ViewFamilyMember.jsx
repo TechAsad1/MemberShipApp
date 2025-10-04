@@ -1,11 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
-import withReactContent from 'sweetalert2-react-content';
-import Swal from "sweetalert2";
 import { Link } from 'feather-icons-react/build/IconComponents';
 import { Table } from 'antd';
 import { getFamilyMember } from '../../core/redux/action';
-import { dateFormat } from "../../helper/helpers";
 
 const ViewFamilyMember = (p) => {
     const dispatch = useDispatch();
@@ -44,7 +41,7 @@ const ViewFamilyMember = (p) => {
         {
             title: "Actions",
             dataIndex: "actions",
-            render: (_, record) => (
+            render: () => (
                 <div className="action-table-data">
                     <div className="edit-delete-action">
                         <Link
@@ -52,7 +49,6 @@ const ViewFamilyMember = (p) => {
                             to="#"
                             data-bs-toggle="modal"
                             data-bs-target="#viewFamilyMember"
-                        // onClick={(e) => updateHandle(e, record.memberId)}
                         >
                             <i data-feather="edit" className="feather-edit"></i>
                         </Link>
@@ -60,7 +56,6 @@ const ViewFamilyMember = (p) => {
                             <i
                                 data-feather="trash-2"
                                 className="feather-trash-2"
-                            // onClick={(e) => showConfirmationAlert(e, record.memberId)}
                             ></i>
                         </Link>
                     </div>

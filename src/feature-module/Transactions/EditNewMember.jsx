@@ -158,11 +158,11 @@ const EditNewMember = () => {
                     membersPicPath3: x.membersPicPath3
                 });
                 setImageList([]);
-                if (x.membersPicPath != "")
+                if (x.membersPicPath && x.membersPicPath != "")
                     setImageList((e) => [...e, x.membersPicPath]);
-                if (x.membersPicPath2 != "")
+                if (x.membersPicPath2 && x.membersPicPath2 != "")
                     setImageList((e) => [...e, x.membersPicPath2]);
-                if (x.membersPicPath3 != "")
+                if (x.membersPicPath3 && x.membersPicPath3 != "")
                     setImageList((e) => [...e, x.membersPicPath3]);
                 isContributorRef.current.checked = x.isContributor;
                 setSelectSourceOfIncome(sourceOfIncomeList.find((i) => i.value === x.sourceOfIncome));
@@ -217,8 +217,8 @@ const EditNewMember = () => {
                 memberStatus: formData.memberStatus, regdate: regDateState, verifiedBy: formData.verifiedBy, entryDate: regDateState, userId: formData.userID,
                 isContributor: formData.isContributor,
                 MembersPicPath: (imageList[0] != null) ? imageList[0] : null,
-                MembersPicPath2: (imageList[1].length > 0) ? imageList[1] : null,
-                MembersPicPath3: (imageList[2].length > 1) ? imageList[2] : null
+                MembersPicPath2: (imageList.length === 2) ? imageList[1] : null,
+                MembersPicPath3: (imageList.length === 3) ? imageList[2] : null
             };
             const memberUrl = config.url + "Member";
             await axios.put(memberUrl + `/${memberId}`, temp).then(() => {
@@ -319,7 +319,7 @@ const EditNewMember = () => {
                 name: familyMemberNameRef.current.value,
                 relation: selectRelation?.label || "",
                 age: Number(ageRef.current.value),
-                qualificationId: selectEducation?.value || "0",
+                qualificationId: selectFamilyEducation?.value || "0",
                 instituteId: selectInstitutes?.value || "0",
                 educationAllw: allowEducationRef.current.checked,
                 bookAllw: allowBookRef.current.checked,
@@ -332,19 +332,22 @@ const EditNewMember = () => {
                 );
             else
                 setFamilyMemberList((prev) => [...prev, newMember]);
-            setFamilyErrors({ ...familyErrors, familyMembernameErr: "", relationsErr: "", ageErr: "", institute: "" });
-            familyMemberNameRef.current.value = "";
-            ageRef.current.value = "0";
-            await delay(500);
-            handleRelation(relation[0]);
-            handleFamilyEducation(educationList[0]);
-            handleInstitutes(institutesList[0]);
-            setIsUpdateMode(false);
-            allowEducationRef.current.checked = false;
-            allowBookRef.current.checked = false;
+            clearChildRow();
             return true;
         }
     };
+    const clearChildRow = async () => {
+        setFamilyErrors({ ...familyErrors, familyMembernameErr: "", relationsErr: "", ageErr: "", institute: "" });
+        familyMemberNameRef.current.value = "";
+        ageRef.current.value = "0";
+        await delay(500);
+        handleRelation(relation[0]);
+        handleFamilyEducation(educationList[0]);
+        handleInstitutes(institutesList[0]);
+        setIsUpdateMode(false);
+        allowEducationRef.current.checked = false;
+        allowBookRef.current.checked = false;
+    }
     const handleFamilyMemberRemove = (index) => {
         familyMemberRemoveAlert(index);
     };
@@ -371,7 +374,6 @@ const EditNewMember = () => {
     const familyMemberRemoveAlert = (index) => {
         MySwal.fire({
             title: "Are you sure you want to delete this record ?",
-            // text: "You won't be able to revert this!",
             showCancelButton: true,
             confirmButtonColor: "#00ff00",
             confirmButtonText: "Yes, delete it!",
@@ -381,6 +383,8 @@ const EditNewMember = () => {
             if (result.isConfirmed) {
                 const updated = familyMemberList.filter((_, i) => i !== index);
                 setFamilyMemberList(updated);
+                if (indexNumber === index)
+                    clearChildRow();
             } else {
                 MySwal.close();
             }
@@ -390,12 +394,22 @@ const EditNewMember = () => {
     const [imageList, setImageList] = useState([]);
     const webCamRef = useRef();
     const handleAddMemberPic = () => {
-        if (imageList.length < 3) {
+        if (webCamRef.current && webCamRef.current.getScreenshot) {
             const capture = webCamRef.current.getScreenshot();
-            setImageList((e) => [...e, capture]);
+
+            if (capture) {
+                if (imageList.length < 3) {
+                    setImageList((prev) => [...prev, capture]);
+                } else {
+                    imgQtyAlert();
+                }
+            } else {
+                msgAlert("Webcam not ready yet, no screenshot captured");
+            }
         }
-        else
-            imgQtyAlert();
+        else {
+            msgAlert("Webcam not connected!");
+        }
     }
     const imgQtyAlert = () => {
         MySwal.fire({
@@ -404,21 +418,17 @@ const EditNewMember = () => {
             confirmButtonText: "Ok",
         })
     };
+    const msgAlert = (msg) => {
+        MySwal.fire({
+            icon: "error",
+            title: msg,
+            confirmButtonText: "Ok",
+        })
+    };
     const handleRemoveMemberPic = (i) => {
         setImageList((e) => e.filter((_, a) => a != i));
     }
 
-    // const val = localStorage.getItem("userID");
-    // useEffect(() => {
-    //     if (!isNaN(val) && Number.isInteger(Number(val)) && Number(val) > 0) {
-    //         const id = Number(val);
-    //         setUserId(id);
-    //     }
-    //     else
-    //         navigate(route.signin);
-    // }, [navigate]);
-    // if (userId === 0)
-    //     return null;
     const [hasCamera, setHasCamera] = useState(false);
     useEffect(() => {
         const updateDevices = async () => {
@@ -436,6 +446,8 @@ const EditNewMember = () => {
     }, []);
 
     const isBase64String = (e) => {
+        if (!e)
+            return false;
         if (e.startsWith("data:image")) return true;
         else return false;
     }
@@ -775,7 +787,7 @@ const EditNewMember = () => {
                                         </div>
                                         <div className="col-lg-2 col-sm-4 col-12 flex-fill">
                                             <label className="form-label">Age</label>
-                                            <input type="text" className="form-control" ref={ageRef} defaultValue={0}></input>
+                                            <input type="number" className="form-control" ref={ageRef} defaultValue={0}></input>
                                             {familyErrors.ageErr && <p style={{ "color": "#dc3545", "padding": "3px" }}>Member age required!</p>}
                                         </div>
                                         <div className="col-lg-2 col-sm-4 col-12 flex-fill">

@@ -25,14 +25,11 @@ const ViewMember = () => {
   const route = all_routes;
   const dispatch = useDispatch();
   const postData = useSelector((state) => state.member);
-  // const users = useSelector((state) => state.users);
   const [search, setSearch] = useState({ name: "Choose Member", status: false });
   const [option, setOption] = useState([{ value: "Choose Member", label: 'Choose Member' }]);
   const [dataSource, setDataSource] = useState([]);
   const [viewMode, setViewMode] = useState(false);
   const [memberRow, setMemberRow] = useState([]);
-
-  // const [loginUser, setLoginUser] = useState(null);
 
   const oldandlatestvalue = [
     { value: "date", label: "Sort by Date" },
