@@ -16,7 +16,6 @@ import ImageWithBasePath from "../../core/img/imagewithbasebath";
 import { deleteMember, getMember } from "../../core/redux/action";
 import withReactContent from "sweetalert2-react-content";
 import { useEffect } from "react";
-import { dateFormat } from "../../helper/helpers";
 import { all_routes } from "../../Router/all_routes";
 import ViewFamilyMember from "./ViewFamilyMember";
 
@@ -48,49 +47,24 @@ const ViewMember = () => {
 
   const columns = [
     {
-      title: "CNIC-No#",
+      title: "CNIC-NO#",
       dataIndex: "cnicno",
       sorter: (a, b) => a.cnicno.length - b.cnicno.length,
     },
-    // {
-    //   title: "Member Name",
-    //   dataIndex: "createdBy",
-    //   render: (x, r) => {
-    //     const user = users?.find((a) => a.userId === r.createdBy);
-    //     return <span>{user?.userName || "Unknown"}</span>;
-    //   },
-    //   sorter: (a, b) => {
-    //     const nameA = users?.find((u) => u.userId === a.createdBy)?.userName || "";
-    //     const nameB = users?.find((u) => u.userId === b.createdBy)?.userName || "";
-    //     return nameA.localeCompare(nameB);
-    //   }
-    // },
+    {
+      title: "Manual Card",
+      dataIndex: "oldCardNo",
+      sorter: (a, b) => a.oldCardNo.length - b.oldCardNo.length,
+    },
     {
       title: "Member Name",
       dataIndex: "memberName",
       sorter: (a, b) => a.memberName.length - b.memberName.length,
     },
     {
-      title: "Father Name",
-      dataIndex: "fatherName",
-      sorter: (a, b) => a.fatherName.length - b.fatherName.length,
-    },
-    {
-      title: "CreatedDate",
-      dataIndex: "regdate",
-      render: (x) => { return <span>{dateFormat(x)}</span> },
-      sorter: (a, b) => a.regdate.length - b.regdate.length,
-    },
-    {
-      title: "Member Status",
-      dataIndex: "memberStatus",
-      render: (x) => (
-        <div>
-          {x && (<span className="badge badge-linesuccess">Active</span>)}
-          {!x && (<span className="badge badge-linedanger">InActive</span>)}
-        </div>
-      ),
-      sorter: (a, b) => a.memberStatus.length - b.memberStatus.length,
+      title: "Current Address",
+      dataIndex: "currentAddress",
+      sorter: (a, b) => a.currentAddress.length - b.currentAddress.length,
     },
     {
       title: "Actions",

@@ -25,6 +25,7 @@ import { IoCloseCircle } from "react-icons/io5";
 import config from "../../config"
 import { getImageFromUrl } from "../../helper/helpers";
 import webcam from "../../images/webcam.png";
+import InputMask from "react-input-mask";
 
 const EditNewMember = () => {
     const route = all_routes;
@@ -54,6 +55,12 @@ const EditNewMember = () => {
 
     const [institutesList, setInstitutesList] = useState([]);
     const [selectInstitutes, setSelectInstitutes] = useState([{ value: 0, label: "Choose Option" }]);
+
+    const [selectParentInstitutes, setSelectParentInstitutes] = useState([{ value: 0, label: "Choose Option" }]);
+    const handleParentInstitutes = (selected) => {
+        setSelectParentInstitutes(institutesList.find((x) => x.value === selected.value));
+        setFormData({ ...formData, otherQualification: selected.label });
+    };
 
     //HouseStatus
     const selectHouseStatusList = [
@@ -91,7 +98,6 @@ const EditNewMember = () => {
     const [familyErrors, setFamilyErrors] = useState({});
     //Ref
     const memberNameRef = useRef();
-    const cNICNoRef = useRef();
     const fatherNameRef = useRef();
     const purminantAddressRef = useRef();
 
@@ -169,6 +175,9 @@ const EditNewMember = () => {
                 setSelectArea(areaList.find((i) => i.value === x.areaId));
                 setSelectHouseStatus(selectHouseStatusList.find((i) => i.value === x.houseStatus));
                 setSelectEducation(educationList.find((i) => i.value === x.qualificationId));
+                setSelectParentInstitutes(institutesList.find((i) => i.label === x.otherQualification));
+                setCnic(x.cnicno);
+
                 if (x.memberStatus)
                     setSelectMemberStatus(memberStatusList.find((i) => i.value === "Active"));
                 else
@@ -176,19 +185,34 @@ const EditNewMember = () => {
             }
         }
     }, [members, educationList, memberId]);
+
+    const isNumeric = (value) => {
+        return !isNaN(value) && !isNaN(parseFloat(value));
+    };
     const validate = () => {
         let tempErrors = {};
-        if (formData.memberName === "") {
+        if (formData.cnicno === "") {
+            tempErrors.cnicErr = "CNIC number required!";
+            setErrors(tempErrors);
+        }
+        else if (formData.cnicno.length < 14) {
+            tempErrors.cnicErr = "Invalid CNIC number, Atleast 13 digits!";
+            setErrors(tempErrors);
+        }
+        else if (formData.oldCardNo === "") {
+            tempErrors.oldCardNoErr = "Manual Card number required!";
+            setErrors(tempErrors);
+        }
+        else if (formData.memberName === "") {
             tempErrors.membernameErr = "Member name required!";
             setErrors(tempErrors);
-            memberNameRef.current.classList.add("is-invalid");
         }
         else {
-            memberNameRef.current.classList.remove("is-invalid");
-            setErrors({ ...errors, membernameErr: "", });
+            setErrors({ ...errors, membernameErr: "", cnicErr: "", oldCardNoErr: "" });
         }
         return Object.keys(tempErrors).length === 0;
     };
+
     const [formData, setFormData] = useState({
         createdBy: 1, imgPath: "", date: new Date(), memberName: "", cnicno: "", fatherName: "", surName: "", cellNo: "",
         oldCardNo: "",
@@ -221,10 +245,17 @@ const EditNewMember = () => {
                 MembersPicPath3: (imageList.length === 3) ? imageList[2] : null
             };
             const memberUrl = config.url + "Member";
-            await axios.put(memberUrl + `/${memberId}`, temp).then(() => {
-                axios.post(config.url + `FamilyMember/${memberId}`, familyMemberList).then(() => {
+            await axios.put(memberUrl + `/${memberId}`, temp).then((e) => {
+                if (!isNumeric(e.data)) {
+                    msgAlert(e.data);
+                }
+                else {
+                    if (familyMemberList.length > 0) {
+                        const familyMemberUrl = config.url + `FamilyMember/${e.data}`;
+                        axios.post(familyMemberUrl, familyMemberList);
+                    }
                     successAlert(null);
-                });
+                }
             });
         }
     };
@@ -452,6 +483,13 @@ const EditNewMember = () => {
         else return false;
     }
 
+    const [cnic, setCnic] = useState("");
+    const handleChangeCnic = (e) => {
+        setCnic(e.target.value);
+        setFormData({ ...formData, cnicno: e.target.value })
+    };
+
+
     return (
         <div className="page-wrapper">
             <div className="content">
@@ -505,7 +543,16 @@ const EditNewMember = () => {
                                                 <div className="col-lg-4 col-sm-6 col-12">
                                                     <div className="mb-3 add-product">
                                                         <label className="form-label">CNIC No#</label>
-                                                        <input type="text" className="form-control" value={formData.cnicno} ref={cNICNoRef} onChange={(e) => setFormData({ ...formData, cnicno: e.target.value })} />
+                                                        <InputMask
+                                                            mask="99999-9999999-9"
+                                                            value={cnic}
+                                                            onChange={handleChangeCnic}
+                                                            maskChar={null}
+                                                            placeholder="12345-1234567-1"
+                                                        >
+                                                            {(inputProps) => <input {...inputProps} className={`form-control ${errors.cnicErr ? "is-invalid" : ""}`} />}
+                                                        </InputMask>
+                                                        {errors.cnicErr && <p style={{ "color": "#dc3545", "padding": "3px" }}>{errors.cnicErr}</p>}
                                                     </div>
                                                 </div>
                                                 <div className="col-lg-4 col-sm-6 col-12">
@@ -609,8 +656,14 @@ const EditNewMember = () => {
                                             <div className="row">
                                                 <div className="col-lg-4 col-sm-6 col-12">
                                                     <div className="mb-3 add-product">
-                                                        <label className="form-label">Skills Qualification</label>
-                                                        <input type="text" className="form-control" value={formData.otherQualification} onChange={(e) => setFormData({ ...formData, otherQualification: e.target.value })} />
+                                                        <label className="form-label">Institute</label>
+                                                        <Select
+                                                            classNamePrefix="react-select"
+                                                            placeholder="Choose Option"
+                                                            options={institutesList}
+                                                            value={selectParentInstitutes}
+                                                            onChange={handleParentInstitutes}
+                                                        />
                                                     </div>
                                                 </div>
                                                 <div className="col-lg-4 col-sm-6 col-12">

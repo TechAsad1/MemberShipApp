@@ -1,20 +1,20 @@
-import { useEffect } from "react";
+// import { useEffect } from "react";
 // import { useNavigate } from "react-router-dom";
 // import { all_routes } from "../Router/all_routes";
-import { getUsers } from "../core/redux/action";
-import { useDispatch, useSelector } from "react-redux";
+// import { getUsers } from "../core/redux/action";
+import { useSelector } from "react-redux";
 
 export function useLoginData() {
     // const route = all_routes;
-    const dispatch = useDispatch();
+    // const dispatch = useDispatch();
     // const navigate = useNavigate();
     // const [loginUser, setLoginUser] = useState([]);
     const users = useSelector((state) => state.users);
     // const val = localStorage.getItem("userID");
 
-    useEffect(() => {
-        dispatch(getUsers());
-    }, [dispatch]);
+    // useEffect(() => {
+    //     dispatch(getUsers());
+    // }, [dispatch]);
 
     // useEffect(() => {
     //     if (!isNaN(val) && Number.isInteger(Number(val)) && Number(val) > 0) {

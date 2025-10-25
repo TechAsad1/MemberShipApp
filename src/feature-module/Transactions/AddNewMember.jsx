@@ -25,6 +25,7 @@ import "./style.css"
 import { IoCloseCircle } from "react-icons/io5";
 import config from "../../config"
 import webcam from "../../images/webcam.png";
+import InputMask from "react-input-mask";
 
 const AddNewMember = () => {
     const route = all_routes;
@@ -52,6 +53,13 @@ const AddNewMember = () => {
 
     const [institutesList, setInstitutesList] = useState([]);
     const [selectInstitutes, setSelectInstitutes] = useState([{ value: 0, label: "Choose Option" }]);
+
+    const [selectParentInstitutes, setSelectParentInstitutes] = useState([{ value: 0, label: "Choose Option" }]);
+    const handleParentInstitutes = (selected) => {
+        setSelectParentInstitutes(institutesList.find((x) => x.value === selected.value));
+        setFormData({ ...formData, otherQualification: selected.label });
+    };
+
 
     //HouseStatus
     const selectHouseStatusList = [
@@ -89,7 +97,6 @@ const AddNewMember = () => {
     const [familyErrors, setFamilyErrors] = useState({});
     //Ref
     const memberNameRef = useRef();
-    const cNICNoRef = useRef();
     const fatherNameRef = useRef();
     const purminantAddressRef = useRef();
 
@@ -132,37 +139,26 @@ const AddNewMember = () => {
             ]);
         }
     }, [institutes]);
-    //Image
-    // const handleImage = (e) => {
-    //     const file = e.target.files;
-    //     if (file) {
-    //         // Allowed image extensions
-    //         const validExtensions = ["jpg", "jpeg", "png", "gif"];
-    //         const fileExtension = file[0].name.split(".").pop().toLowerCase();
-    //         if (!validExtensions.includes(fileExtension)) {
-    //             errorAlert(null);
-    //             return;
-    //         }
-    //         setIsImageChange(true);
-    //         setImgFile(e.target.files[0]);
-    //         setIsImageVisible(true);
-    //         const reader = new FileReader();
-    //         reader.onloadend = (r) => {
-    //             setImage(r.target.result);
-    //         };
-    //         reader.readAsDataURL(e.target.files[0]);
-    //     }
-    // }
     const validate = () => {
         let tempErrors = {};
-        if (formData.memberName === "") {
+        if (formData.cnicno === "") {
+            tempErrors.cnicErr = "CNIC number required!";
+            setErrors(tempErrors);
+        }
+        else if (formData.cnicno.length < 14) {
+            tempErrors.cnicErr = "Invalid CNIC number, Atleast 13 digits!";
+            setErrors(tempErrors);
+        }
+        else if (formData.oldCardNo === "") {
+            tempErrors.oldCardNoErr = "Manual Card number required!";
+            setErrors(tempErrors);
+        }
+        else if (formData.memberName === "") {
             tempErrors.membernameErr = "Member name required!";
             setErrors(tempErrors);
-            memberNameRef.current.classList.add("is-invalid");
         }
         else {
-            memberNameRef.current.classList.remove("is-invalid");
-            setErrors({ ...errors, membernameErr: "", });
+            setErrors({ ...errors, membernameErr: "", cnicErr: "", oldCardNoErr: "" });
         }
         return Object.keys(tempErrors).length === 0;
     };
@@ -184,6 +180,9 @@ const AddNewMember = () => {
         isContributor: false
     });
     const [familyMemberList, setFamilyMemberList] = useState([]);
+    const isNumeric = (value) => {
+        return !isNaN(value) && !isNaN(parseFloat(value));
+    };
     //Submit
     const handleSubmit = async () => {
         if (validate()) {
@@ -201,10 +200,16 @@ const AddNewMember = () => {
             };
             const memberUrl = config.url + "Member";
             await axios.post(memberUrl, temp).then((e) => {
-                const familyMemberUrl = config.url + `FamilyMember/${e.data}`;
-                axios.post(familyMemberUrl, familyMemberList).then(() => {
+                if (!isNumeric(e.data)) {
+                    msgAlert(e.data);
+                }
+                else {
+                    if (familyMemberList.length > 0) {
+                        const familyMemberUrl = config.url + `FamilyMember/${e.data}`;
+                        axios.post(familyMemberUrl, familyMemberList);
+                    }
                     successAlert(null);
-                });
+                }
             });
         }
     };
@@ -420,6 +425,12 @@ const AddNewMember = () => {
         };
     }, []);
 
+    const [cnic, setCnic] = useState("");
+    const handleChangeCnic = (e) => {
+        setCnic(e.target.value);
+        setFormData({ ...formData, cnicno: e.target.value })
+    };
+
     return (
         <div className="page-wrapper">
             <div className="content">
@@ -472,19 +483,29 @@ const AddNewMember = () => {
                                                 <div className="col-lg-4 col-sm-6 col-12">
                                                     <div className="mb-3 add-product">
                                                         <label className="form-label">CNIC No#</label>
-                                                        <input type="text" className="form-control" value={formData.cnicno} ref={cNICNoRef} onChange={(e) => setFormData({ ...formData, cnicno: e.target.value })} />
+                                                        <InputMask
+                                                            mask="99999-9999999-9"
+                                                            value={cnic}
+                                                            onChange={handleChangeCnic}
+                                                            maskChar={null}
+                                                            placeholder="12345-1234567-1"
+                                                        >
+                                                            {(inputProps) => <input {...inputProps} className={`form-control ${errors.cnicErr ? "is-invalid" : ""}`} />}
+                                                        </InputMask>
+                                                        {errors.cnicErr && <p style={{ "color": "#dc3545", "padding": "3px" }}>{errors.cnicErr}</p>}
                                                     </div>
                                                 </div>
                                                 <div className="col-lg-4 col-sm-6 col-12">
                                                     <div className="mb-3">
                                                         <label className="form-label">Manual Card#</label>
-                                                        <input type="text" className="form-control" value={formData.oldCardNo} onChange={(e) => setFormData({ ...formData, oldCardNo: e.target.value })} />
+                                                        <input type="text" className={`form-control ${errors.oldCardNoErr ? "is-invalid" : ""}`} value={formData.oldCardNo} onChange={(e) => setFormData({ ...formData, oldCardNo: e.target.value })} />
+                                                        {errors.oldCardNoErr && <p style={{ "color": "#dc3545", "padding": "3px" }}>{errors.oldCardNoErr}</p>}
                                                     </div>
                                                 </div>
                                                 <div className="col-lg-4 col-sm-6 col-12">
                                                     <div className="mb-3">
                                                         <label className="form-label">Member Name</label>
-                                                        <input type="text" className={"form-control " + (errors.membernameErr ? "is-invalid" : "")} value={formData.memberName} ref={memberNameRef} onChange={(e) => setFormData({ ...formData, memberName: e.target.value })} required />
+                                                        <input type="text" className={`form-control ${errors.membernameErr ? "is-invalid" : ""}`} value={formData.memberName} ref={memberNameRef} onChange={(e) => setFormData({ ...formData, memberName: e.target.value })} required />
                                                         {errors.membernameErr && <p style={{ "color": "#dc3545", "padding": "3px" }}>{errors.membernameErr}</p>}
                                                     </div>
                                                 </div>
@@ -576,8 +597,14 @@ const AddNewMember = () => {
                                             <div className="row">
                                                 <div className="col-lg-4 col-sm-6 col-12">
                                                     <div className="mb-3 add-product">
-                                                        <label className="form-label">Skills Qualification</label>
-                                                        <input type="text" className="form-control" value={formData.otherQualification} onChange={(e) => setFormData({ ...formData, otherQualification: e.target.value })} />
+                                                        <label className="form-label">Institute</label>
+                                                        <Select
+                                                            classNamePrefix="react-select"
+                                                            placeholder="Choose Option"
+                                                            options={institutesList}
+                                                            value={selectParentInstitutes}
+                                                            onChange={handleParentInstitutes}
+                                                        />
                                                     </div>
                                                 </div>
                                                 <div className="col-lg-4 col-sm-6 col-12">
